@@ -35,8 +35,6 @@ def logicalXOR(x1, x2):
     else:
         return 0
 
-
-
 a = 1
 b = 0
 print(f'Logical AND: {logicalAND(a, b)}')

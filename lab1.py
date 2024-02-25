@@ -25,7 +25,7 @@ class NeuralNetwork:
     def sigmoid_deriv(self, x):
 		# compute the derivative of the sigmoid function ASSUMING
 		# that x has already been passed through the 'sigmoid' function
-        return x * (1 - x)
+        return np.exp(-x) / (1 + np.exp(-x)) ** 2
     
     def fit(self, X, y, epochs=1000, displayUpdate=100):
 		# insert a column of 1's as the last entry in the feature
