@@ -15,6 +15,7 @@ class NeuralNetwork:
         self.network.append(output_layer)
         self.dataset = dataset
 
+
     # зважена сума
     def activate(self, weights, inputs):
         activation = 0
@@ -22,37 +23,41 @@ class NeuralNetwork:
             activation += weights[i] * inputs[i]
         return activation
 
+
     # де тут множити на 10 і як 
     # функція активації нейрона - сигмоїд
     def transfer(self, activation):
         return 10.0  / (1.0 + np.exp(-activation))
 
+
     # похідна сигмоїд для обрахунку похибки
     def transfer_derivative(self, output):
         return 10.0 * np.exp(-output) / (1.0 + np.exp(-output)) ** 2
     
+
     # todo
     # Backpropagate error and store in neurons
     def backward_propagate_error(self, expected):
         for i in reversed(range(len(self.network))):
             layer = self.network[i]
             errors = list()
+            #  вихід
             if i != len(self.network)-1:
                 for j in range(len(layer)):
                     error = 0.0
                     for neuron in self.network[i + 1]:
                         error += (neuron['weights'][j] * neuron['delta'])
                     errors.append(error)
+            # прихований прошарок
             else:
                 for j in range(len(layer)):
                     neuron = layer[j]
                     errors.append(neuron['output'] - expected)
-                    # errors.append(neuron['output'] - expected[j])
             for j in range(len(layer)):
                 neuron = layer[j]
-                # print(errors)
                 neuron['delta'] = errors[j] * self.transfer_derivative(neuron['output']) * self.network[1][0]['weights'][j]
                 # * neuton['input] 
+
 
     # todo
     # Update network weights with error
@@ -63,11 +68,11 @@ class NeuralNetwork:
                 inputs = [neuron['output'] for neuron in self.network[i - 1]]
             for neuron in self.network[i]:
                 for j in range(len(inputs)):
-                    
+
                     neuron['weights'][j] -= neuron['delta'] * self.l_rate * inputs[j] * neuron['weights'][j]
                 neuron['weights'][-1] -= neuron['delta'] * self.l_rate
 
-    # todo
+
     # Train a network for a fixed number of epochs
     def train_network(self, n_epoch):
         for epoch in range(n_epoch):
@@ -76,8 +81,8 @@ class NeuralNetwork:
 
             for row, target in zip(self.dataset, expected):
                 output = self.forward_propagate(row)
-                # print(target, output)
-                sum_error += (target - output) ** 2
+                # Yi – yi === обчислене значення виходу нейрона – правильне значення наступного члену часового ряду
+                sum_error += (output - target) ** 2
                 self.backward_propagate_error(target)
                 self.update_weights(row)
             
@@ -97,14 +102,12 @@ class NeuralNetwork:
                 new_inputs.append(neuron['output'])
             inputs = new_inputs
         return inputs[0]
+    
 
-    # todo
     # Make a prediction with a network
     def predict(self, row):
-        # outputs = self.forward_propagate(row)
         output = self.forward_propagate(row)
         return output
-        # return outputs.index(max(outputs))
 
 
 # Test training backprop algorithm
@@ -122,20 +125,24 @@ dataset = [[2.54, 5.28, 0.78, 5.72],
             [5.67, 1.73, 5.70, 1.03]]
 
 myNetwork = NeuralNetwork(3, 4, 1, l_rate, dataset)
+
+for layer in myNetwork.network:
+    print(layer)
+
 myNetwork.train_network(n_epoch)
 
-# for layer in myNetwork.network:
-#     print(layer)
+for layer in myNetwork.network:
+    print(layer)
 
-i = 0
-for row in dataset:
-    prediction = myNetwork.predict(dataset[i])
-    print('Expected=%.2f, Got=%.2f' % (row[-1], prediction))
-    i += 1
+# i = 0
+# for row in dataset:
+#     prediction = myNetwork.predict(dataset[i])
+#     print('Expected=%.2f, Got=%.4f' % (row[-1], prediction))
+#     i += 1
 
 row1 = [1.73, 5.70, 1.03, 5.00]
 row2 = [5.70, 1.03, 5.00, 1.79]
 prediction1 = myNetwork.predict(row1)
-print('Expected=%.2f, Got=%.2f' % (row1[-1], prediction1))
+print('Expected=%.2f, Got=%.4f' % (row1[-1], prediction1))
 prediction2 = myNetwork.predict(row2)
-print('Expected=%.2f, Got=%.2f' % (row2[-1], prediction2))
+print('Expected=%.2f, Got=%.4f' % (row2[-1], prediction2))
