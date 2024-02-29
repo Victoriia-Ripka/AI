@@ -21,25 +21,25 @@ class NeuralNetwork:
         return self.transfer(output) * ( 1.0 - self.transfer(output))
     
 
-    def update_weights(self, d_output, d_hidden_input):
-        self.weights_output_hidden += np.dot(self.hidden_output.T, d_output) * self.l_rate
-        self.output_bias += np.sum(d_output, axis=0, keepdims=True) * self.l_rate
-        self.weights_input_hidden += np.dot(self.dataset_inputs.T, d_hidden_input) * self.l_rate
-        self.hidden_bias += np.sum(d_hidden_input, axis=0, keepdims=True) * self.l_rate
-
+    def forward_propagate(self, data):
+        self.hidden_input = np.dot(data, self.weights_input_hidden) + self.hidden_bias
+        self.hidden_output = self.transfer(self.hidden_input)
+        self.output = np.dot(self.hidden_output, self.weights_output_hidden) + self.output_bias
+        return self.output
+    
 
     def backward_propagate_error(self, output):
         d_output = np.subtract(self.dataset_outputs, output)
         d_hidden_output = np.dot(d_output, self.weights_output_hidden.T)
         d_hidden_input = d_hidden_output * self.transfer_derivative(self.hidden_output)
         self.update_weights(d_output, d_hidden_input)
+    
 
-
-    def forward_propagate(self, data):
-        self.hidden_input = np.dot(data, self.weights_input_hidden) + self.hidden_bias
-        self.hidden_output = self.transfer(self.hidden_input)
-        self.output = np.dot(self.hidden_output, self.weights_output_hidden) + self.output_bias
-        return self.output
+    def update_weights(self, d_output, d_hidden_input):
+        self.weights_output_hidden += np.dot(self.hidden_output.T, d_output) * self.l_rate
+        self.output_bias += np.sum(d_output, axis=0, keepdims=True) * self.l_rate
+        self.weights_input_hidden += np.dot(self.dataset_inputs.T, d_hidden_input) * self.l_rate
+        self.hidden_bias += np.sum(d_hidden_input, axis=0, keepdims=True) * self.l_rate
 
 
     def train_network(self, error_threshold=0.0001):
@@ -74,7 +74,7 @@ datasetY = np.array([[5.72], [0.58], [4.65], [0.91], [5.80], [1.76], [5.67], [1.
 myNetwork = NeuralNetwork(3, 4, 1, l_rate, datasetX, datasetY, n_epoch)
 myNetwork.train_network()
 
-test_dataset = np.array([[1.95, 4.18, 0.04], [ 4.18, 0.04, 5.05]])
+test_dataset = np.array([[1.95, 4.18, 0.04], [4.18, 0.04, 5.05]])
 test_output = np.array([[5.00], [1.79]])
 prediction = myNetwork.forward_propagate(test_dataset)
 for i in range(0, len(test_dataset)):
