@@ -6,9 +6,9 @@ class NeuralNetwork:
         self.n_epoch = n_epoch
         self.dataset_inputs = datasetX
         self.dataset_outputs = datasetY
-        self.weights_input_hidden = np.random.randn(n_inputs, n_hidden)
+        self.weights_hidden_input = np.random.randn(n_inputs, n_hidden)
         self.hidden_bias = np.zeros((1, n_hidden))
-        self.weights_output_hidden = np.random.randn(n_hidden, n_outputs)
+        self.weights_hidden_output = np.random.randn(n_hidden, n_outputs)
         self.output_bias = np.zeros((1, n_outputs))
 
 
@@ -17,32 +17,39 @@ class NeuralNetwork:
         return 1.0  / (1.0 + np.exp(-x))
 
 
-    def transfer_derivative(self, output):
-        return self.transfer(output) * ( 1.0 - self.transfer(output))
+    def transfer_derivative(self, x):
+        return self.transfer(x) * ( 1.0 - self.transfer(x))
     
 
     def forward_propagate(self, data):
-        self.hidden_input = np.dot(data, self.weights_input_hidden) + self.hidden_bias
+        # вираховується зважена сума до прошарку
+        self.hidden_input = np.dot(data, self.weights_hidden_input) + self.hidden_bias
+        # вихід після функції активації
         self.hidden_output = self.transfer(self.hidden_input)
-        self.output = np.dot(self.hidden_output, self.weights_output_hidden) + self.output_bias
+        # вираховується вихід з прошарку
+        self.output = np.dot(self.hidden_output, self.weights_hidden_output) + self.output_bias
         return self.output
     
 
     def backward_propagate_error(self, output):
+        # обрахування похибки для прихованого прошарку
         d_output = np.subtract(self.dataset_outputs, output)
-        d_hidden_output = np.dot(d_output, self.weights_output_hidden.T)
+        d_hidden_output = np.dot(d_output, self.weights_hidden_output.T)
         d_hidden_input = d_hidden_output * self.transfer_derivative(self.hidden_output)
         self.update_weights(d_output, d_hidden_input)
     
 
     def update_weights(self, d_output, d_hidden_input):
-        self.weights_output_hidden += np.dot(self.hidden_output.T, d_output) * self.l_rate
-        self.output_bias += np.sum(d_output, axis=0, keepdims=True) * self.l_rate
-        self.weights_input_hidden += np.dot(self.dataset_inputs.T, d_hidden_input) * self.l_rate
+        # оновлення вагів з входів до прихованого прошарку
+        self.weights_hidden_input += np.dot(self.dataset_inputs.T, d_hidden_input) * self.l_rate
         self.hidden_bias += np.sum(d_hidden_input, axis=0, keepdims=True) * self.l_rate
 
+        # оновлення вагів з прихованого прошарку до виходу
+        self.weights_hidden_output += np.dot(self.hidden_output.T, d_output) * self.l_rate
+        self.output_bias += np.sum(d_output, axis=0, keepdims=True) * self.l_rate
 
-    def train_network(self, error_threshold=0.0001):
+
+    def train_network(self, error_threshold=0.00001):
         for epoch in range(self.n_epoch):
             output = self.forward_propagate(self.dataset_inputs)
             self.backward_propagate_error(output)
@@ -57,8 +64,8 @@ class NeuralNetwork:
 
     
 # Test training backprop algorithm
-l_rate = 0.1
-n_epoch = 5000
+l_rate = 0.08
+n_epoch = 15000
 datasetX = np.array([[2.54, 5.28, 0.78],
             [5.28, 0.78, 5.72],
             [0.78, 5.72, 0.58],
