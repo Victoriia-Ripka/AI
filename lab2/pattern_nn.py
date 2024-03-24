@@ -8,6 +8,7 @@ def relu_derivative(x):
     return np.where(x >= 0, 1, 0)
 
 def sigmoid(x):
+    x = np.clip(x, -500, 500)
     return 1 / (1 + np.exp(-x))
 
 def sigmoid_derivative(x):
@@ -76,13 +77,9 @@ class NeuralNetwork:
 
 
     def backward_propagate_error(self, output):
-        print(output)
         # обрахування похибки для прихованого прошарку
         output_numeric = np.array(self.dataset_outputs, dtype=int)
         d_output = np.subtract(output_numeric, output)
-
-        print(d_output)
-        print(self.weights_hidden_output.T)
         d_hidden_output = np.dot(d_output, self.weights_hidden_output.T)
         d_hidden_input = d_hidden_output * self.f_derivative(self.hidden_output)
         self.update_weights(d_output, d_hidden_input)
@@ -90,20 +87,30 @@ class NeuralNetwork:
 
     def update_weights(self, d_output, d_hidden_input):
         # оновлення вагів з входів до прихованого прошарку
-        self.weights_hidden_input += np.dot(self.dataset_inputs.T, d_hidden_input) * self.l_rate
-        self.hidden_bias += np.sum(d_hidden_input, axis=0, keepdims=True) * self.l_rate
+        dataset_inputs_array = np.array(self.dataset_inputs, dtype=float)
+        dataset_inputs_matrix = np.matrix(dataset_inputs_array)
+        for i in range(len(dataset_inputs_matrix)):
+            dataset_input_row = dataset_inputs_matrix[i].reshape(-1, 1)
+            d_hidden_input_column = d_hidden_input.reshape(-1, 1)
+            self.weights_hidden_input += np.dot(dataset_input_row, d_hidden_input_column.T) * self.l_rate
+            self.hidden_bias += np.sum(d_hidden_input, axis=0, keepdims=True) * self.l_rate
 
         # оновлення вагів з прихованого прошарку до виходу
-        self.weights_hidden_output += np.dot(self.hidden_output.T, d_output) * self.l_rate
-        self.output_bias += np.sum(d_output, axis=0, keepdims=True) * self.l_rate
+        # dataset_output_array = np.array(self.hidden_output, dtype=float)
+        # dataset_output_matrix = np.matrix(dataset_output_array)
+        for i in range(len(self.hidden_output)):
+            # dataset_input_row = dataset_inputs_matrix[i].reshape(-1, 1)
+            # d_hidden_input_column = d_hidden_input.reshape(-1, 1)
+            self.weights_hidden_output += np.dot(self.hidden_output[i].T, d_output) * self.l_rate
+            self.output_bias += np.sum(d_output, axis=0, keepdims=True) * self.l_rate
 
 
     def train_network(self, error_threshold=0.00001):
         for epoch in range(self.n_epoch):
             output = self.forward_propagate()
             self.backward_propagate_error(output)
-
-            current_error = abs(float(output[0][0]) - float(self.dataset_outputs[0][0]))
+            output_list = [float(x) for x in self.dataset_outputs]
+            current_error = abs(float(output[0]) - float(output_list[0]))
             if epoch % 100 == 0:
                 print('[INFO] epoch=%d, error=%.4f' % (epoch, current_error))
 
@@ -112,9 +119,8 @@ class NeuralNetwork:
                 break
 
 
-
 l_rate = 0.08
-n_epoch = 15000
+n_epoch = 150
 filename = "train.py"
 
 my_nn = NeuralNetwork(36, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
