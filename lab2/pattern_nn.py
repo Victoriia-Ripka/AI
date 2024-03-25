@@ -76,6 +76,7 @@ class NeuralNetwork:
             # вираховується вихід з прошарку
             result = np.dot(self.hidden_output, self.weights_hidden_output) + self.output_bias
             # output.append(result[0])
+            # print(result[0])
             output.append(result[0][0])
         return output
 
@@ -119,8 +120,9 @@ class NeuralNetwork:
 
             # Calculate the current error
             current_error = abs(np.mean(np.subtract(np_output, dataset_outputs_float)))
-            if epoch % 1000 == 0:
-                print('[INFO] epoch=%d, error=%.4f' % (epoch, current_error))
+            if epoch % 2 == 0:
+                print('[INFO] error=%.4f' % (current_error))
+                # print('[INFO] epoch=%d, error=%.4f' % (epoch, current_error))
 
             if current_error < error_threshold:
                 print('[INFO] Training stopped. Error is below the threshold.')
@@ -132,15 +134,25 @@ n_epoch = 10
 # filename = "lab2/train.py"
 filename = "train.py"
 
+# my_nn0S = NeuralNetwork(0, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
+# my_nn0S.train_network()
+# _, _, data, codes = my_nn0S.read_dataset('test1.py')
+# print('prediction: ', my_nn0S.forward_propagate(data), '\n')
+
 my_nn36S = NeuralNetwork(36, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
 my_nn36S.train_network()
 _, _, data, codes = my_nn36S.read_dataset('test1.py')
-print(my_nn36S.forward_propagate(data), '\n')
+print('prediction: ', my_nn36S.forward_propagate(data), '\n')
 
 my_nn72S = NeuralNetwork(72, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
 my_nn72S.train_network()
 _, _, data, codes = my_nn72S.read_dataset('test1.py')
 print(my_nn72S.forward_propagate(data), '\n')
+
+# my_nn0T = NeuralNetwork(0, l_rate, n_epoch, filename, tanh, tanh_derivative)
+# my_nn0T.train_network()
+# _, _, data, codes = my_nn0T.read_dataset('test1.py')
+# print(my_nn0T.forward_propagate(data), '\n')
 
 my_nn36T = NeuralNetwork(36, l_rate, n_epoch, filename, tanh, tanh_derivative)
 my_nn36T.train_network()
@@ -151,6 +163,11 @@ my_nn72T = NeuralNetwork(72, l_rate, n_epoch, filename, tanh, tanh_derivative)
 my_nn72T.train_network()
 _, _, data, codes = my_nn72T.read_dataset('test1.py')
 print(my_nn72T.forward_propagate(data), '\n')
+
+# my_nn0R = NeuralNetwork(0, l_rate, n_epoch, filename, relu, relu_derivative)
+# my_nn0R.train_network()
+# _, _, data, codes = my_nn0R.read_dataset('test1.py')
+# print(my_nn0R.forward_propagate(data), '\n')
 
 my_nn36R = NeuralNetwork(36, l_rate, n_epoch, filename, relu, relu_derivative)
 my_nn36R.train_network()
