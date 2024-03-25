@@ -32,8 +32,9 @@ class NeuralNetwork:
         self.f = f
         self.f_derivative = f_derivative
 
-        n_inputs, n_outputs, data, codes = self.read_dataset(filename)
+        count_of_imgs, n_inputs, n_outputs, data, codes = self.read_dataset(filename)
 
+        self.count_of_imgs = count_of_imgs
         self.dataset_inputs = data
         self.dataset_outputs = codes
         self.weights_hidden_input = np.random.randn(n_inputs, n_hidden)
@@ -46,19 +47,20 @@ class NeuralNetwork:
         with open(filename, 'r') as file:
             lines = file.readlines()
 
-        count_of_inputs = int(lines[0])
-        count_of_outputs = int(lines[1])
+        count_of_imgs = int(lines[0])
+        count_of_inputs = int(lines[1])
+        count_of_outputs = int(lines[2])
         data = []
         codes = []
 
-        for i in range(3, len(lines), 3):
+        for i in range(4, len(lines), 3):
             data_line = lines[i].strip()
             code_line = lines[i + 1].strip()
 
             data.append([x for x in data_line.split(',')])
             codes.append(code_line)
 
-        return count_of_inputs, count_of_outputs, data, codes
+        return count_of_imgs, count_of_inputs, count_of_outputs, data, codes
         
 
     def forward_propagate(self, data=None):
@@ -67,7 +69,7 @@ class NeuralNetwork:
 
         output = []
         
-        for i in range(len(self.dataset_inputs)):
+        for i in range(self.count_of_imgs):
             # вираховується зважена сума до прошарку
             data_numeric = np.array(self.dataset_inputs[i], dtype=int)
             self.hidden_input = np.dot(data_numeric, self.weights_hidden_input) + self.hidden_bias[0]
@@ -75,9 +77,8 @@ class NeuralNetwork:
             self.hidden_output = self.f(self.hidden_input)
             # вираховується вихід з прошарку
             result = np.dot(self.hidden_output, self.weights_hidden_output) + self.output_bias
-            # output.append(result[0])
-            # print(result[0])
             output.append(result[0][0])
+        # print(output)
         return output
 
 
@@ -85,6 +86,8 @@ class NeuralNetwork:
         # обрахування похибки для прихованого прошарку
         output_numeric = np.array(self.dataset_outputs, dtype=int)
         d_output = np.subtract(output_numeric, output)
+        # print(d_output)
+        # print(self.weights_hidden_output.T)
         d_hidden_output = np.dot(d_output, self.weights_hidden_output.T)
         d_hidden_input = d_hidden_output * self.f_derivative(self.hidden_output)
         self.update_weights(d_output, d_hidden_input)
@@ -136,48 +139,48 @@ filename = "train.py"
 
 # my_nn0S = NeuralNetwork(0, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
 # my_nn0S.train_network()
-# _, _, data, codes = my_nn0S.read_dataset('test1.py')
+# _, _, _, data, codes = my_nn0S.read_dataset('test1.py')
 # print('prediction: ', my_nn0S.forward_propagate(data), '\n')
 
 my_nn36S = NeuralNetwork(36, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
 my_nn36S.train_network()
-_, _, data, codes = my_nn36S.read_dataset('test1.py')
+_, _, _, data, codes = my_nn36S.read_dataset('test1.py')
 print('prediction: ', my_nn36S.forward_propagate(data), '\n')
 
-my_nn72S = NeuralNetwork(72, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
-my_nn72S.train_network()
-_, _, data, codes = my_nn72S.read_dataset('test1.py')
-print(my_nn72S.forward_propagate(data), '\n')
+# my_nn72S = NeuralNetwork(72, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
+# my_nn72S.train_network()
+# _, _, _, data, codes = my_nn72S.read_dataset('test1.py')
+# print(my_nn72S.forward_propagate(data), '\n')
 
 # my_nn0T = NeuralNetwork(0, l_rate, n_epoch, filename, tanh, tanh_derivative)
 # my_nn0T.train_network()
-# _, _, data, codes = my_nn0T.read_dataset('test1.py')
+# _, _, _, data, codes = my_nn0T.read_dataset('test1.py')
 # print(my_nn0T.forward_propagate(data), '\n')
 
-my_nn36T = NeuralNetwork(36, l_rate, n_epoch, filename, tanh, tanh_derivative)
-my_nn36T.train_network()
-_, _, data, codes = my_nn36T.read_dataset('test1.py')
-print(my_nn36T.forward_propagate(data), '\n')
+# my_nn36T = NeuralNetwork(36, l_rate, n_epoch, filename, tanh, tanh_derivative)
+# my_nn36T.train_network()
+# _, _, _, data, codes = my_nn36T.read_dataset('test1.py')
+# print(my_nn36T.forward_propagate(data), '\n')
 
-my_nn72T = NeuralNetwork(72, l_rate, n_epoch, filename, tanh, tanh_derivative)
-my_nn72T.train_network()
-_, _, data, codes = my_nn72T.read_dataset('test1.py')
-print(my_nn72T.forward_propagate(data), '\n')
+# my_nn72T = NeuralNetwork(72, l_rate, n_epoch, filename, tanh, tanh_derivative)
+# my_nn72T.train_network()
+# _, _, _, data, codes = my_nn72T.read_dataset('test1.py')
+# print(my_nn72T.forward_propagate(data), '\n')
 
 # my_nn0R = NeuralNetwork(0, l_rate, n_epoch, filename, relu, relu_derivative)
 # my_nn0R.train_network()
-# _, _, data, codes = my_nn0R.read_dataset('test1.py')
+# _, _, _, data, codes = my_nn0R.read_dataset('test1.py')
 # print(my_nn0R.forward_propagate(data), '\n')
 
-my_nn36R = NeuralNetwork(36, l_rate, n_epoch, filename, relu, relu_derivative)
-my_nn36R.train_network()
-_, _, data, codes = my_nn36R.read_dataset('test1.py')
-print(my_nn36R.forward_propagate(data), '\n')
+# my_nn36R = NeuralNetwork(36, l_rate, n_epoch, filename, relu, relu_derivative)
+# my_nn36R.train_network()
+# _, _, _, data, codes = my_nn36R.read_dataset('test1.py')
+# print(my_nn36R.forward_propagate(data), '\n')
 
-my_nn72R = NeuralNetwork(72, l_rate, n_epoch, filename, relu, relu_derivative)
-my_nn72R.train_network()
-_, _, data, codes = my_nn72R.read_dataset('test1.py')
-print(my_nn72R.forward_propagate(data), '\n')
+# my_nn72R = NeuralNetwork(72, l_rate, n_epoch, filename, relu, relu_derivative)
+# my_nn72R.train_network()
+# _, _, _, data, codes = my_nn72R.read_dataset('test1.py')
+# print(my_nn72R.forward_propagate(data), '\n')
 
 
 # без прихованого шару
