@@ -59,9 +59,12 @@ class NeuralNetwork:
             codes.append(code_line)
 
         return count_of_inputs, count_of_outputs, data, codes
+        
 
+    def forward_propagate(self, data=None):
+        if data is None:
+            data = self.dataset_inputs
 
-    def forward_propagate(self):
         output = []
         
         for i in range(len(self.dataset_inputs)):
@@ -72,6 +75,7 @@ class NeuralNetwork:
             self.hidden_output = self.f(self.hidden_input)
             # вираховується вихід з прошарку
             result = np.dot(self.hidden_output, self.weights_hidden_output) + self.output_bias
+            # output.append(result[0])
             output.append(result[0][0])
         return output
 
@@ -109,9 +113,13 @@ class NeuralNetwork:
         for epoch in range(self.n_epoch):
             output = self.forward_propagate()
             self.backward_propagate_error(output)
-            output_list = [float(x) for x in self.dataset_outputs]
-            current_error = abs(float(output[0]) - float(output_list[0]))
-            if epoch % 100 == 0:
+
+            np_output = np.array(output)
+            dataset_outputs_float = np.array(self.dataset_outputs, dtype=np.float64)
+
+            # Calculate the current error
+            current_error = abs(np.mean(np.subtract(np_output, dataset_outputs_float)))
+            if epoch % 1000 == 0:
                 print('[INFO] epoch=%d, error=%.4f' % (epoch, current_error))
 
             if current_error < error_threshold:
@@ -119,12 +127,42 @@ class NeuralNetwork:
                 break
 
 
-l_rate = 0.08
-n_epoch = 150
+l_rate = 0.1
+n_epoch = 10
+# filename = "lab2/train.py"
 filename = "train.py"
 
-my_nn = NeuralNetwork(36, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
-my_nn.train_network()
+my_nn36S = NeuralNetwork(36, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
+my_nn36S.train_network()
+_, _, data, codes = my_nn36S.read_dataset('test1.py')
+print(my_nn36S.forward_propagate(data), '\n')
+
+my_nn72S = NeuralNetwork(72, l_rate, n_epoch, filename, sigmoid, sigmoid_derivative)
+my_nn72S.train_network()
+_, _, data, codes = my_nn72S.read_dataset('test1.py')
+print(my_nn72S.forward_propagate(data), '\n')
+
+my_nn36T = NeuralNetwork(36, l_rate, n_epoch, filename, tanh, tanh_derivative)
+my_nn36T.train_network()
+_, _, data, codes = my_nn36T.read_dataset('test1.py')
+print(my_nn36T.forward_propagate(data), '\n')
+
+my_nn72T = NeuralNetwork(72, l_rate, n_epoch, filename, tanh, tanh_derivative)
+my_nn72T.train_network()
+_, _, data, codes = my_nn72T.read_dataset('test1.py')
+print(my_nn72T.forward_propagate(data), '\n')
+
+my_nn36R = NeuralNetwork(36, l_rate, n_epoch, filename, relu, relu_derivative)
+my_nn36R.train_network()
+_, _, data, codes = my_nn36R.read_dataset('test1.py')
+print(my_nn36R.forward_propagate(data), '\n')
+
+my_nn72R = NeuralNetwork(72, l_rate, n_epoch, filename, relu, relu_derivative)
+my_nn72R.train_network()
+_, _, data, codes = my_nn72R.read_dataset('test1.py')
+print(my_nn72R.forward_propagate(data), '\n')
+
+
 # без прихованого шару
 # 1 прихований шар 36 нейронів
 # 1 прихований шар 72 нейрони
