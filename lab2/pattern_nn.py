@@ -85,21 +85,23 @@ class NeuralNetwork:
 
     def predict(self, x):
         return np.argmax(self.forward_propagate(x), axis=1)
+        # return self.forward_propagate(x)
 
 
     def forward_propagate(self, data):
-        input_layer = data
-        self.layer_inputs = [input_layer]
+        layer_input = data
+        self.layer_inputs = [layer_input]
 
-        n_hidden_layers = len(self.weights)-1
+        n_hidden_layers = len(self.weights) - 1
         for i in range(n_hidden_layers):
             # вираховується зважена сума до прошарків
-            output_layer = np.dot(input_layer, self.weights[i]) + self.biases[i]
-            input_layer = self.activation_function(output_layer)
-            self.layer_inputs.append(input_layer)
+            layer_output = np.dot(layer_input, self.weights[i]) + self.biases[i]
+            layer_input = self.activation_function(layer_output)
+            self.layer_inputs.append(layer_input)
         
         # вихід з останнього прихованого шару з функцією активації softmax
-        output = np.dot(input_layer, self.weights[-1]) + self.biases[-1]
+        output = np.dot(layer_input, self.weights[-1]) + self.biases[-1]
+        # output = np.clip(output, -700, 700)
         output = self.softmax(output)
         return output
 
@@ -114,7 +116,7 @@ class NeuralNetwork:
         self.biases[-1] -= l_rate * np.sum(output_delta, axis=0, keepdims=True) 
 
         # 
-        for i in range(len(self.weights) - 1):        
+        for i in range(len(self.weights) - 2, 0, -1):        
             error = np.dot(output_delta, self.weights[i + 1].T)
             delta = error * self.activation_function(self.layer_inputs[i], True)
             self.weights[i] -= l_rate * np.dot(self.layer_inputs[i - 1].T, delta)
@@ -122,10 +124,10 @@ class NeuralNetwork:
             output_delta = delta
 
         # 
-        error = np.dot(output_delta, self.weights[0].T)
+        error = np.dot(output_delta, self.weights[1].T)
         delta = error * self.activation_function(self.layer_inputs[0], True)
-        self.weights[0] -= l_rate * np.dot(self.layer_inputs[0].T, output_delta)
-        self.biases[0] -= l_rate * np.sum(output_delta, axis=0, keepdims=True) 
+        self.weights[0] -= l_rate * np.dot(self.layer_inputs[0].T, delta)
+        self.biases[0] -= l_rate * np.sum(delta, axis=0, keepdims=True) 
 
 
     def train_network(self, n_epoch, l_rate, error_threshold=0.0001):
@@ -149,30 +151,30 @@ n_epoch = 15000
 train_filename = "train.py"
 test_filename = 'test1.py'
 # hidden_layers = [0, 0]
-hidden_layers = [36, 1]
-# hidden_layers = [36, 2]
+# hidden_layers = [36, 1]
+hidden_layers = [36, 2]
 # hidden_layers = [72, 1]
 
-print("\nNN 36 - 36 - 5 neurons \nSigmoid activation function\n")
+print("\nSigmoid activation function\n")
 my_nnS = NeuralNetwork(hidden_layers, train_filename, 'sigmoid')
 my_nnS.train_network(n_epoch, l_rate)
 _, _, data, _ = my_nnS.read_dataset(test_filename)
 print('\nExpected result:', my_nnS.dataset_outputs)
 print('Predictions:    ', my_nnS.predict(data), '\n')
 
-# print("\nNN 36 - 36 - 5 neurons \nTanh activation function\n")
-# my_nnT = NeuralNetwork(hidden_layers, train_filename, 'tanh')
-# my_nnT.train_network(n_epoch, l_rate)
-# _, _, data, _ = my_nnT.read_dataset(test_filename)
-# print('\nExpected result:', my_nnT.dataset_outputs)
-# print('Predictions:    ', my_nnT.predict(data), '\n')
+print("\nTanh activation function\n")
+my_nnT = NeuralNetwork(hidden_layers, train_filename, 'tanh')
+my_nnT.train_network(n_epoch, l_rate, error_threshold=0.00005)
+_, _, data, _ = my_nnT.read_dataset(test_filename)
+print('\nExpected result:', my_nnT.dataset_outputs)
+print('Predictions:    ', my_nnT.predict(data), '\n')
 
-# print("\nNN 36 - 36 - 5 neurons \nRelu activation function\n")
-# my_nnR = NeuralNetwork(hidden_layers, train_filename, 'relu')
-# my_nnR.train_network(n_epoch, l_rate)
-# _, _, data, _ = my_nnR.read_dataset(test_filename)
-# print('\nExpected result:', my_nnR.dataset_outputs)
-# print('Predictions:    ', my_nnR.predict(data), '\n')
+print("\nRelu activation function\n")
+my_nnR = NeuralNetwork(hidden_layers, train_filename, 'relu')
+my_nnR.train_network(n_epoch, l_rate)
+_, _, data, _ = my_nnR.read_dataset(test_filename)
+print('\nExpected result:', my_nnR.dataset_outputs)
+print('Predictions:    ', my_nnR.predict(data), '\n')
 
 
 
