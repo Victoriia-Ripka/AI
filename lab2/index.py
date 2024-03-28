@@ -35,6 +35,7 @@ class NeuralNetwork:
         }
         return activation_functions.get(function_name)
     
+
     @staticmethod
     def relu(x, derive=False):
         if not derive:
@@ -117,7 +118,7 @@ class NeuralNetwork:
             self.backward_propagate_error(data, codes, l_rate)
 
             if epoch % 5000 == 0:
-                error = -np.mean(np.log(output[np.arange(len(codes)), np.argmax(codes)]))
+                error = -np.mean(np.log(output[np.arange(len(codes)), np.argmax(codes, axis = 1)]))
                 print('[INFO] epoch=%d, error=%.4f' % (epoch, error))
 
                 if error < error_threshold:
