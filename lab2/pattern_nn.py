@@ -2,12 +2,12 @@ import numpy as np
 
 
 class NeuralNetwork:
-    def __init__(self, n_hidden, filename, function):
-        n_inputs, n_outputs, data, codes = self.read_dataset(filename)
+    def __init__(self, hidden_layers, filename, function):
+        input_size, output_size, data, codes = self.read_dataset(filename)
 
-        self.n_inputs = n_inputs
-        self.n_hidden = n_hidden
-        self.n_outputs = n_outputs
+        self.input_size = input_size
+        self.hidden_layers = hidden_layers
+        self.output_size = output_size
         self.dataset_inputs = data
         self.dataset_outputs = codes
         self.activation_function = self.initialize_activation_function(function)
@@ -15,15 +15,15 @@ class NeuralNetwork:
         self.weights = []
         self.biases = []
 
-        self.initialize_layer(self.n_inputs, self.n_hidden[0])
-        for i in range(len(self.n_hidden)):
+        self.initialize_layer(self.input_size, self.hidden_layers[0])
+        for i in range(1, len(self.hidden_layers)):
 
-            if i == len(self.n_hidden) - 1:
-                layers = self.n_outputs 
+            if i == len(self.hidden_layers) - 1:
+                layers = self.output_size 
             else:
-                self.n_hidden[i]
+                layers = self.hidden_layers[i]
             
-            self.initialize_layer(self.n_hidden[i - 1], layers)
+            self.initialize_layer(self.hidden_layers[i - 1], layers)
 
 
     def read_dataset(self, filename):
@@ -45,9 +45,9 @@ class NeuralNetwork:
         return count_of_inputs, count_of_outputs, np.array(data), np.array(codes)
 
 
-    def initialize_layer(self, n_inputs, n_outputs):
-        self.weights.append(np.random.randn(n_inputs, n_outputs)) 
-        self.biases.append(np.zeros((1, n_outputs)))
+    def initialize_layer(self, input_size, output_size):
+        self.weights.append(np.random.randn(input_size, output_size)) 
+        self.biases.append(np.zeros((1, output_size)))
     
 
     def initialize_activation_function(self, function_name):
@@ -79,8 +79,8 @@ class NeuralNetwork:
 
 
     def softmax(self, x):
-        exp_x = np.exp(x - np.max(x))  # Додання зміщення для стабільності
-        return exp_x / np.sum(exp_x, axis=0)
+        exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))  # Додання зміщення для стабільності
+        return exp_x / np.sum(exp_x, axis=1, keepdims=True)
 
 
     def predict(self, x):
@@ -91,9 +91,9 @@ class NeuralNetwork:
         input_layer = data
         self.layer_inputs = [input_layer]
 
-        for i in range(len(self.weights)-1):
+        n_hidden_layers = len(self.weights)-1
+        for i in range(n_hidden_layers):
             # вираховується зважена сума до прошарків
-            # data_numeric = np.array(self.dataset_inputs[i], dtype=int)
             output_layer = np.dot(input_layer, self.weights[i]) + self.biases[i]
             input_layer = self.activation_function(output_layer)
             self.layer_inputs.append(input_layer)
@@ -114,7 +114,7 @@ class NeuralNetwork:
         self.biases[-1] -= l_rate * np.sum(output_delta, axis=0, keepdims=True) 
 
         # 
-        for i in range(len(self.weights) - 1):
+        for i in range(len(self.weights) - 1):        
             error = np.dot(output_delta, self.weights[i + 1].T)
             delta = error * self.activation_function(self.layer_inputs[i], True)
             self.weights[i] -= l_rate * np.dot(self.layer_inputs[i - 1].T, delta)
@@ -128,15 +128,14 @@ class NeuralNetwork:
         self.biases[0] -= l_rate * np.sum(output_delta, axis=0, keepdims=True) 
 
 
-    def train_network(self, n_epoch, l_rate, error_threshold=0.00001):
+    def train_network(self, n_epoch, l_rate, error_threshold=0.0001):
         for epoch in range(n_epoch):
             output = self.forward_propagate(self.dataset_inputs)
             self.layer_outputs = self.layer_inputs.copy()
             self.layer_outputs.append(output)
             self.backward_propagate_error(l_rate)
 
-            # Calculate the current error
-            if epoch % 2 == 0:
+            if epoch % 2000 == 0:
                 error = -np.mean(np.log(output[np.arange(len(self.dataset_outputs)), np.argmax(self.dataset_outputs)]))
                 print('[INFO] epoch=%d, error=%.4f' % (epoch, error))
 
@@ -145,73 +144,46 @@ class NeuralNetwork:
                     break
 
 
-l_rate = 0.08
-n_epoch = 200
-filename = "train.py"
+l_rate = 0.05
+n_epoch = 15000
+train_filename = "train.py"
+test_filename = 'test1.py'
+# hidden_layers = [0, 0]
+hidden_layers = [36, 1]
+# hidden_layers = [36, 2]
+# hidden_layers = [72, 1]
 
-print("NN 36 neurons 00 neurons sigmoid function")
-my_nn36S = NeuralNetwork([36], filename, 'sigmoid')
-my_nn36S.train_network(n_epoch, l_rate)
-_, _, data, _ = my_nn36S.read_dataset('test1.py')
-print('Expected result:', my_nn36S.dataset_outputs)
-print('Predictions:    ', my_nn36S.predict(data), '\n')
+print("\nNN 36 - 36 - 5 neurons \nSigmoid activation function\n")
+my_nnS = NeuralNetwork(hidden_layers, train_filename, 'sigmoid')
+my_nnS.train_network(n_epoch, l_rate)
+_, _, data, _ = my_nnS.read_dataset(test_filename)
+print('\nExpected result:', my_nnS.dataset_outputs)
+print('Predictions:    ', my_nnS.predict(data), '\n')
 
-# my_nn0S = NeuralNetwork([0], filename, 'sigmoid')
-# my_nn0S.train_network()
-# _, _, data, codes = my_nn0S.read_dataset('test1.py')
-# print('prediction: ', my_nn0S.forward_propagate(data), '\n')
+# print("\nNN 36 - 36 - 5 neurons \nTanh activation function\n")
+# my_nnT = NeuralNetwork(hidden_layers, train_filename, 'tanh')
+# my_nnT.train_network(n_epoch, l_rate)
+# _, _, data, _ = my_nnT.read_dataset(test_filename)
+# print('\nExpected result:', my_nnT.dataset_outputs)
+# print('Predictions:    ', my_nnT.predict(data), '\n')
+
+# print("\nNN 36 - 36 - 5 neurons \nRelu activation function\n")
+# my_nnR = NeuralNetwork(hidden_layers, train_filename, 'relu')
+# my_nnR.train_network(n_epoch, l_rate)
+# _, _, data, _ = my_nnR.read_dataset(test_filename)
+# print('\nExpected result:', my_nnR.dataset_outputs)
+# print('Predictions:    ', my_nnR.predict(data), '\n')
 
 
 
-# my_nn36x2S = NeuralNetwork([36, 36], filename, 'sigmoid')
-# my_nn36S.train_network()
-# _, _, data, codes = my_nn36S.read_dataset('test1.py')
-# print('prediction: ', my_nn36S.forward_propagate(data), '\n')
 
-# my_nn72S = NeuralNetwork([72], filename, 'sigmoid')
-# my_nn72S.train_network()
-# _, _, data, codes = my_nn72S.read_dataset('test1.py')
-# print(my_nn72S.forward_propagate(data), '\n')
 
-# my_nn0T = NeuralNetwork([0], filename, 'tanh')
-# my_nn0T.train_network()
-# _, _, data, codes = my_nn0T.read_dataset('test1.py')
-# print(my_nn0T.forward_propagate(data), '\n')
 
-# my_nn36T = NeuralNetwork([36], filename, 'tanh')
-# my_nn36T.train_network()
-# _, _, data, codes = my_nn36T.read_dataset('test1.py')
-# print(my_nn36T.forward_propagate(data), '\n')
 
-# my_nn36x2T = NeuralNetwork([36, 36], filename, 'tanh')
-# my_nn36x2T.train_network()
-# _, _, data, codes = my_nn36T.read_dataset('test1.py')
-# print(my_nn36T.forward_propagate(data), '\n')
 
-# my_nn72T = NeuralNetwork([72], filename, 'tanh')
-# my_nn72T.train_network()
-# _, _, data, codes = my_nn72T.read_dataset('test1.py')
-# print(my_nn72T.forward_propagate(data), '\n')
 
-# my_nn0R = NeuralNetwork([0], filename, 'relu')
-# my_nn0R.train_network()
-# _, _, data, codes = my_nn0R.read_dataset('test1.py')
-# print(my_nn0R.forward_propagate(data), '\n')
 
-# my_nn36R = NeuralNetwork([36], filename, 'relu')
-# my_nn36R.train_network()
-# _, _, data, codes = my_nn36R.read_dataset('test1.py')
-# print(my_nn36R.forward_propagate(data), '\n')
 
-# my_nn36x2R = NeuralNetwork([36, 36], filename, 'relu')
-# my_nn36x2R.train_network()
-# _, _, data, codes = my_nn36R.read_dataset('test1.py')
-# print(my_nn36R.forward_propagate(data), '\n')
-
-# my_nn72R = NeuralNetwork([72], filename, 'relu')
-# my_nn72R.train_network()
-# _, _, data, codes = my_nn72R.read_dataset('test1.py')
-# print(my_nn72R.forward_propagate(data), '\n')
 
 
 # без прихованого шару
