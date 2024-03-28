@@ -157,7 +157,7 @@ codes = np.array([0, 1, 2, 3, 4])
 l_rate = 0.05
 n_epoch = 25000
 input_layer_size = data.shape[1]
-hidden_layers = [36, 3]
+hidden_layers = [36, 1]
 output_layer_size = len(codes)
 
 
@@ -166,17 +166,17 @@ print("\nSigmoid activation function\n")
 nn_S = NeuralNetwork(input_layer_size, hidden_layers, output_layer_size, 'sigmoid')
 nn_S.train_network(data, np.eye(output_layer_size)[codes], n_epoch, l_rate)
 print('\nExpected result:', codes)
-print('Predictions:    ', nn_S.predict(test_data1), '\n')
+print('Predictions:    ', nn_S.predict(test_data2), '\n')
 
 print("\nTanh activation function\n")
 nn_T = NeuralNetwork(input_layer_size, hidden_layers, output_layer_size, 'tanh')
 nn_T.train_network(data, np.eye(output_layer_size)[codes], n_epoch, l_rate)
 print('\nExpected result:', codes)
-print('Predictions:    ', nn_T.predict(test_data1), '\n')
+print('Predictions:    ', nn_T.predict(test_data2), '\n')
 
 print("\nRelu activation function\n")
 nn_R = NeuralNetwork(input_layer_size, hidden_layers, output_layer_size, 'relu')
 nn_R.train_network(data, np.eye(output_layer_size)[codes], n_epoch, l_rate)
 print('\nExpected result:', codes)
-print('Predictions:    ', nn_R.predict(test_data1), '\n')
+print('Predictions:    ', nn_R.predict(test_data2), '\n')
 
