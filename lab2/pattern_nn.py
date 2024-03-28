@@ -1,30 +1,8 @@
 import numpy as np
 
-# функції активації та їх похідні
-def relu(x, derive=False):
-    if not derive:
-        return np.maximum(0, x)
-    return np.where(x >= 0, 1, 0)
-
-def sigmoid(x, derive=False):
-    clipped_x = np.clip(x, -500, 500)
-    if not derive:
-        return 1 / (1 + np.exp(-clipped_x))
-    return x * (1 - x)
-
-def tanh(x, derive=False):
-    if not derive:
-        return np.tanh(x)
-    return 1 - np.square(np.tanh(x))
-
-def softmax(x):
-    exp_x = np.exp(x - np.max(x))  # Додання зміщення для стабільності
-    return exp_x / np.sum(exp_x, axis=0)
 
 class NeuralNetwork:
     def __init__(self, n_hidden, filename, function):
-        self.activation_function = function
-
         n_inputs, n_outputs, data, codes = self.read_dataset(filename)
 
         self.n_inputs = n_inputs
@@ -32,11 +10,11 @@ class NeuralNetwork:
         self.n_outputs = n_outputs
         self.dataset_inputs = data
         self.dataset_outputs = codes
+        self.activation_function = self.initialize_activation_function(function)
 
         self.weights = []
         self.biases = []
 
-        print(self.n_inputs, self.n_hidden)
         self.initialize_layer(self.n_inputs, self.n_hidden[0])
         for i in range(len(self.n_hidden)):
 
@@ -61,17 +39,49 @@ class NeuralNetwork:
             data_line = lines[i].strip()
             code_line = lines[i + 1].strip()
 
-            data.append([x for x in data_line.split(',')])
-            codes.append(code_line)
+            data.append([int(x) for x in data_line.split(',')])
+            codes.append(int(code_line))
 
         return count_of_inputs, count_of_outputs, np.array(data), np.array(codes)
 
 
     def initialize_layer(self, n_inputs, n_outputs):
-        print(type(n_inputs), type(n_outputs))
         self.weights.append(np.random.randn(n_inputs, n_outputs)) 
         self.biases.append(np.zeros((1, n_outputs)))
     
+
+    def initialize_activation_function(self, function_name):
+        activation_functions = {
+            'relu': self.relu,
+            'sigmoid': self.sigmoid,
+            'tanh': self.tanh
+        }
+        return activation_functions.get(function_name, self.sigmoid)
+    
+
+    def relu(self, x, derive=False):
+        if not derive:
+            return np.maximum(0, x)
+        return np.where(x >= 0, 1, 0)
+
+
+    def sigmoid(self, x, derive=False):
+        clipped_x = np.clip(x, -500, 500)
+        if not derive:
+            return 1 / (1 + np.exp(-clipped_x))
+        return x * (1 - x)
+
+
+    def tanh(self, x, derive=False):
+        if not derive:
+            return np.tanh(x)
+        return 1 - np.square(np.tanh(x))
+
+
+    def softmax(self, x):
+        exp_x = np.exp(x - np.max(x))  # Додання зміщення для стабільності
+        return exp_x / np.sum(exp_x, axis=0)
+
 
     def predict(self, x):
         return np.argmax(self.forward_propagate(x), axis=1)
@@ -90,15 +100,15 @@ class NeuralNetwork:
         
         # вихід з останнього прихованого шару з функцією активації softmax
         output = np.dot(input_layer, self.weights[-1]) + self.biases[-1]
-        output = softmax(output)
+        output = self.softmax(output)
         return output
 
 
-    def backward_propagate_error(self, X, y, l_rate):
-        num_samples = X.shape[0]
+    def backward_propagate_error(self, l_rate):
+        num_samples = self.dataset_inputs.shape[0]
 
         # обрахування похибки для прихованого прошарку
-        output_error = self.layer_output[-1] - y
+        output_error = self.layer_outputs[-1] - self.dataset_outputs
         output_delta = output_error/num_samples
         self.weights[-1] -= l_rate * np.dot(self.layer_inputs[-1].T, output_delta)
         self.biases[-1] -= l_rate * np.sum(output_delta, axis=0, keepdims=True) 
@@ -112,22 +122,22 @@ class NeuralNetwork:
             output_delta = delta
 
         # 
-        error = np.dot(output_delta, self.weights[1].T)
+        error = np.dot(output_delta, self.weights[0].T)
         delta = error * self.activation_function(self.layer_inputs[0], True)
         self.weights[0] -= l_rate * np.dot(self.layer_inputs[0].T, output_delta)
         self.biases[0] -= l_rate * np.sum(output_delta, axis=0, keepdims=True) 
 
 
-    def train_network(self, X, y, n_epoch, l_rate, error_threshold=0.00001):
+    def train_network(self, n_epoch, l_rate, error_threshold=0.00001):
         for epoch in range(n_epoch):
-            output = self.forward_propagate(X)
+            output = self.forward_propagate(self.dataset_inputs)
             self.layer_outputs = self.layer_inputs.copy()
             self.layer_outputs.append(output)
-            self.backward_propagate_error(X, y, l_rate)
+            self.backward_propagate_error(l_rate)
 
             # Calculate the current error
-            if epoch % 200 == 0:
-                error = -np.mean(np.log(output[np.arange(len(y)), np.argmax(y, axis=1)]))
+            if epoch % 2 == 0:
+                error = -np.mean(np.log(output[np.arange(len(self.dataset_outputs)), np.argmax(self.dataset_outputs)]))
                 print('[INFO] epoch=%d, error=%.4f' % (epoch, error))
 
                 if error < error_threshold:
@@ -136,18 +146,22 @@ class NeuralNetwork:
 
 
 l_rate = 0.08
-n_epoch = 5000
+n_epoch = 200
 filename = "train.py"
+
+print("NN 36 neurons 00 neurons sigmoid function")
+my_nn36S = NeuralNetwork([36], filename, 'sigmoid')
+my_nn36S.train_network(n_epoch, l_rate)
+_, _, data, _ = my_nn36S.read_dataset('test1.py')
+print('Expected result:', my_nn36S.dataset_outputs)
+print('Predictions:    ', my_nn36S.predict(data), '\n')
 
 # my_nn0S = NeuralNetwork([0], filename, 'sigmoid')
 # my_nn0S.train_network()
 # _, _, data, codes = my_nn0S.read_dataset('test1.py')
 # print('prediction: ', my_nn0S.forward_propagate(data), '\n')
 
-my_nn36S = NeuralNetwork([36], filename, 'sigmoid')
-my_nn36S.train_network()
-_, _, data, codes = my_nn36S.read_dataset('test1.py')
-print('prediction: ', my_nn36S.forward_propagate(data), '\n')
+
 
 # my_nn36x2S = NeuralNetwork([36, 36], filename, 'sigmoid')
 # my_nn36S.train_network()
