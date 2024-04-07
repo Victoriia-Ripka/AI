@@ -40,23 +40,24 @@ def crossover(p1, p2, r_cross):
 
 
 def mutate(bitstring, r_mut):
-    rand = np.random.random
-
     for i in range(len(bitstring)):
-        if rand() < r_mut:
+        if np.random.random() < r_mut:
             bitstring[i] = 1 - bitstring[i]
     
     return bitstring
 
 
 def genetic_alg(function, bounds, n_bits, n_iter, pop_size, r_cross, r_mut, delta_threshold=1e-6):
+    # створення популяції з рандомних особин ( особина - двійкова 16-бітова інформація)
     pop = [np.random.randint(0, 2, n_bits).tolist() for _ in range(pop_size)]
 
+    # присвоєння початкових min і max
     best_min, best_min_eval = 0, function(decode(bounds, n_bits, pop[0]))
     prev_best_min_eval = best_min_eval
     best_max, best_max_eval = 0, function(decode(bounds, n_bits, pop[0]))
     prev_best_max_eval = best_max_eval
 
+    # еволюція в процесі
     for gen in range(n_iter):
         decoded_value = [decode(bounds, n_bits, p) for p in pop]
         scores = [function(d) for d in decoded_value]
@@ -91,10 +92,9 @@ def genetic_alg(function, bounds, n_bits, n_iter, pop_size, r_cross, r_mut, delt
 def main():
     bounds = [0, 4]
     n_bits = 16
-    n_iter = 100
+    n_iter = 10
     pop_size = 500
-
-    r_cross = 0.2
+    r_cross = 0.9
     r_mut = 1.0 / float(n_bits) # 0.0625
 
     best_min, score_min, best_max, score_max = genetic_alg(function, bounds, n_bits, n_iter, pop_size, r_cross, r_mut)
