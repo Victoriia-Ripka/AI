@@ -4,11 +4,12 @@ def function(x):
     return 5*np.sin(10*x)*np.sin(3*x)
 
 
+# декодує бінарне bitsrting у число і масштабує у заданих межах
 def decode(bounds, n_bits, bitsrting):
+    # найбільше число, що можу бути записане у двійковій системі у 16 бітах
     largest = 2**n_bits
 
-    start, end = 0 * n_bits, (0 * n_bits) + n_bits
-    substring = bitsrting[start:end]
+    substring = bitsrting[0:n_bits]
     chars = ''.join([str(s) for s in substring])
     integer = int(chars, 2)
     value = bounds[0] + (integer/largest) * (bounds[1] - bounds[0])
@@ -16,7 +17,9 @@ def decode(bounds, n_bits, bitsrting):
     return value
 
 
-def selection(pop, scores, k=10):
+# відбирає k найкращих особин у наступне покоління 
+def selection(pop, scores, k=3):
+    # індекс для початкового вибору
     selection_ix = np.random.randint(len(pop))
 
     for ix in np.random.randint(0, len(pop), k-1):
@@ -26,10 +29,11 @@ def selection(pop, scores, k=10):
     return pop[selection_ix]
 
 
-# створює 2 дітей
+# генетичний оператор схрещування створює 2 дітей від 2 батьків
 def crossover(p1, p2, r_cross):
     c1, c2 = p1.copy(), p2.copy()
 
+    # схрещування відбувається, якщо рандом менший ніж швидкість кросинговеру
     if np.random.rand() < r_cross:
         pt = np.random.randint(1, len(p1)-2)
 
@@ -39,6 +43,7 @@ def crossover(p1, p2, r_cross):
     return [c1, c2]
 
 
+# генетичний оператор мутації
 def mutate(bitstring, r_mut):
     for i in range(len(bitstring)):
         if np.random.random() < r_mut:
@@ -62,6 +67,7 @@ def genetic_alg(function, bounds, n_bits, n_iter, pop_size, r_cross, r_mut, delt
         decoded_value = [decode(bounds, n_bits, p) for p in pop]
         scores = [function(d) for d in decoded_value]
 
+        # перебираємо кожну особину у популяції для изначення поточного мін/макс
         for i in range(pop_size):
             if scores[i] < best_min_eval:
                 best_min, best_min_eval = pop[i], scores[i]
@@ -76,6 +82,7 @@ def genetic_alg(function, bounds, n_bits, n_iter, pop_size, r_cross, r_mut, delt
             break
         prev_best_min_eval = best_min_eval
 
+        # наповнення настпуного покоління
         selected = [selection(pop, scores) for _ in range(pop_size)]
         children = list()
         for i in range(0, pop_size, 2):
