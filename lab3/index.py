@@ -1,7 +1,7 @@
 import numpy as np
 
 def function(x):
-    return 5*np.sin(10*x)*np.sin(3*x)
+    return 2*x*x*x - 5*x*x - 60*x + 200
 
 
 # декодує бінарне bitsrting у число і масштабує у заданих межах
@@ -97,7 +97,7 @@ def genetic_alg(function, bounds, n_bits, n_iter, pop_size, r_cross, r_mut, delt
 
 
 def main():
-    bounds = [0, 4]
+    bounds = [0, 10]
     n_bits = 16
     n_iter = 10
     pop_size = 500
